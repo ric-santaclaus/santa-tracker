@@ -1,19 +1,231 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Youtube Video</title>
+  <meta charset="UTF-8">
+  <title>Santa Tracker Personalizzato</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Video YouTube che riempie lo schermo */
+    #player {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Barra superiore in stile NORAD */
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      background: rgba(0, 45, 90);
+      color: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-sizing: border-box;
+      padding: 10px 40px;
+      text-shadow: 0 0 4px #000;
+      font-size: 16px;
+    }
+
+    .top-section {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .label {
+      font-size: 12px;
+      letter-spacing: 1px;
+      opacity: 0.8;
+    }
+
+    .value {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* Barra inferiore "Merry Christmas" opzionale */
+    .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 98px;
+      background: #c00000; /* colore che si abbina al banner */
+      display: flex;
+      justify-content: center;
+    }
+
+    .bottom-bar img {
+      height: 100%;
+      width: auto;          /* ⬅️ mantiene dimensioni reali */
+    }
+  </style>
 </head>
 <body>
-    <h1>How to code Flappy Bird in JavaScript</h1>
-    <p>Watch this tutorial to learn how to code flappy bird with html, css, and javascript</p>
-</body>
+  <div class="container">
+    <!-- VIDEO YOUTUBE -->
+    <iframe
+      id="player"
+      src="https://www.youtube.com/embed/yInnIs2voyQ?autoplay=1&controls=0&mute=1&start=4267&loop=1&playlist=yInnIs2voyQ"
+      allow="autoplay; encrypted-media"
+      allowfullscreen>
+    </iframe>
 
-<style>
-    body {
-        text-align: center;
-        font-family: Arial, Helvetica, sans-serif;
+    
+
+    <!-- BARRA SUPERIORE PERSONALIZZATA -->
+    <div class="top-bar">
+      <div class="top-section">
+        <span class="label">LAST SEEN</span>
+        <span id="lastSeen" class="value">Ajaccio, Corsica, France</span>
+      </div>
+      <div class="top-section">
+        <span class="label">HEADING FOR</span>
+        <!-- QUI comparirà anche la tua città -->
+        <span id="headingFor" class="value">Fidenza, Italy in 22 seconds</span>
+      </div>
+      <div class="top-section" style="text-align:right;">
+        <span class="label">GIFTS DELIVERED</span>
+        <span id="gifts" class="value">3,687,623,918</span>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+        <img src="c.png" alt="Christmas banner" class="bottom-image">
+    </div>
+
+
+  </div>
+
+  <script>
+
+  function forceMyTown(townName, seconds = 20) {
+    stops.unshift({
+      lastSeen: stops[index].lastSeen,
+      heading: townName,
+      countdown: seconds
+    });
+
+    index = 0;
+    timeLeft = stops[0].countdown;
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === "p") {
+      forceMyTown("Parma, Italy", 3);
     }
-</style>
+  });
+
+    function formatTime(seconds) {
+  if (seconds < 60) {
+    return `${seconds} seconds`;
+  }
+
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+
+  if (secs === 0) {
+    return `${mins} minute${mins > 1 ? "s" : ""}`;
+  }
+
+  return `${mins} minute${mins > 1 ? "s" : ""} ${secs} seconds`;
+}
+
+  // Lista delle tappe
+  const stops = [
+    {
+      lastSeen: "Ajaccio, Corsica, France",
+      heading: "Nice, France",
+      countdown: 100
+    },
+    {
+      lastSeen: "Nice, France",
+      heading: "Genoa, Italy",
+      countdown: 20
+    },
+    {
+      lastSeen: "Genoa, Italy",
+      heading: "Milan, Italy",
+      countdown: 18
+    },
+    {
+      lastSeen: "Milan, Italy",
+      heading: "Casa di Luca, Parma",
+      countdown: 15
+    }
+  ];
+
+  let index = 0;
+  let timeLeft = stops[index].countdown;
+
+  // 🎁 PACCHI CONSEGNATI — parte da un numero a scelta
+  let giftsDelivered = 3684123;
+
+  // Ogni secondo quanti pacchi aggiunge?
+  const giftsPerSecondMin = 5000;
+  const giftsPerSecondMax = 20000;
+
+  // Funzione per formattare i numeri con la virgola
+  function formatNumber(num) {
+    return num.toLocaleString("en-US");
+  }
+
+  // Aggiorna il testo della barra
+  function updateBar() {
+  const stop = stops[index];
+  document.getElementById("lastSeen").textContent = stop.lastSeen;
+
+  // countdown formattato minuti + secondi
+  document.getElementById("headingFor").textContent =
+    `${stop.heading} in ${formatTime(timeLeft)}`;
+
+  // 🔁 aggiorna il numero dei pacchi
+  document.getElementById("gifts").textContent =
+    formatNumber(giftsDelivered);
+}
+
+  // Timer generale che gira ogni secondo
+  function tick() {
+    timeLeft--;
+
+    // 🔄 Aggiorna pacchi consegnati in modo realistico
+    const randomIncrement =
+      Math.floor(Math.random() * (giftsPerSecondMax - giftsPerSecondMin + 1)) +
+      giftsPerSecondMin;
+
+    giftsDelivered += randomIncrement;
+
+    // Cambio città quando arriva a zero
+    if (timeLeft <= 0) {
+      index = (index + 1) % stops.length;
+      timeLeft = stops[index].countdown;
+    }
+
+    updateBar();
+  }
+
+  // Avvio
+  updateBar();
+  setInterval(tick, 1000);
+</script>
+
+
+</body>
 </html>
