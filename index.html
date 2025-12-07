@@ -1,8 +1,11 @@
+<!-- python -m http.server 8000 there, and navigate to http://localhost:8000/yourfile.html -->
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8">
   <title>Santa Tracker Personalizzato</title>
+
   <style>
     html, body {
       margin: 0;
@@ -25,14 +28,14 @@
       border: none;
     }
 
-    /* Barra superiore in stile NORAD */
+    /* Barra superiore */
     .top-bar {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100px;
-      background: rgba(0, 45, 90);
+      background: rgb(0, 45, 90);
       color: #fff;
       font-family: Arial, Helvetica, sans-serif;
       display: flex;
@@ -42,6 +45,7 @@
       padding: 10px 40px;
       text-shadow: 0 0 4px #000;
       font-size: 16px;
+      z-index: 9999;
     }
 
     .top-section {
@@ -51,7 +55,6 @@
 
     .label {
       font-size: 12px;
-      letter-spacing: 1px;
       opacity: 0.8;
     }
 
@@ -60,26 +63,83 @@
       font-weight: bold;
     }
 
-    /* Barra inferiore "Merry Christmas" opzionale */
+    
     .bottom-bar {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 98px;
-      background: #c00000; /* colore che si abbina al banner */
-      display: flex;
-      justify-content: center;
-    }
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 150px;
+    height: 80px;
+    background: black;
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+    z-index: 9999;
+    overflow: hidden;
+  }
 
-    .bottom-bar img {
-      height: 100%;
-      width: auto;          /* ⬅️ mantiene dimensioni reali */
+  .rsbn-cover {
+    position: absolute;
+    bottom: 42px;    /* appena sopra la barra rossa */
+    right: 190px;     /* distanza dal bordo destro */
+    width: 175px;
+    height: 30px;
+    background: red;     /* puoi cambiare colore */
+    opacity: 1;          /* leggero effetto vetro */
+    z-index: 9000;         /* sotto il bottone */
+  }
+
+
+
+
+  .bottom-text {
+    position: relative;
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  /* piccoli fiocchi di neve che si muovono piano */
+  .snow {
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .snow:last-child {
+    animation-delay: 1.5s;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+
+    /* Bottone invisibile */
+    #secretButton {
+      position: absolute;
+      bottom: 40px;
+      right: 185px;
+      width: 180px;
+      height: 180px;
+      /*opacity: 0;     
+      border: none;
+      background: transparent;*/
+      opacity: 0;          /* ora si vede */
+      background: black;       /* colore per vedere il box */
+      border: 2px solid white;
+      cursor: pointer;
+      z-index: 100000;
     }
   </style>
 </head>
+
 <body>
   <div class="container">
+
     <!-- VIDEO YOUTUBE -->
     <iframe
       id="player"
@@ -88,144 +148,176 @@
       allowfullscreen>
     </iframe>
 
-    
-
-    <!-- BARRA SUPERIORE PERSONALIZZATA -->
+    <!-- BARRA SUPERIORE -->
     <div class="top-bar">
       <div class="top-section">
         <span class="label">LAST SEEN</span>
-        <span id="lastSeen" class="value">Ajaccio, Corsica, France</span>
+        <span id="lastSeen" class="value">Loading...</span>
       </div>
+
       <div class="top-section">
         <span class="label">HEADING FOR</span>
-        <!-- QUI comparirà anche la tua città -->
-        <span id="headingFor" class="value">Fidenza, Italy in 22 seconds</span>
+        <span id="headingFor" class="value">Loading...</span>
       </div>
+
       <div class="top-section" style="text-align:right;">
         <span class="label">GIFTS DELIVERED</span>
-        <span id="gifts" class="value">3,687,623,918</span>
+        <span id="gifts" class="value">0</span>
       </div>
     </div>
 
-    <div class="bottom-bar">
-        <img src="c.png" alt="Christmas banner" class="bottom-image">
-    </div>
+    <!-- BANNER -->
+    <div class="bottom-bar"></div>
 
+    <!-- BOTTONE INVISIBILE -->
+    <button id="secretButton"></button>
+
+    <div class="rsbn-cover"></div>
+    
 
   </div>
 
   <script>
+    /* --- FORZA LA TUA CITTÀ --- */
+    function forceMyTown(townName, seconds = 20) {
+      stops.unshift({
+        lastSeen: stops[index].lastSeen,
+        heading: townName,
+        countdown: seconds
+      });
 
-  function forceMyTown(townName, seconds = 20) {
-    stops.unshift({
-      lastSeen: stops[index].lastSeen,
-      heading: townName,
-      countdown: seconds
+      index = 0;
+      timeLeft = stops[0].countdown;
+    }
+
+    /* Bottone invisibile → va a Torino */
+    document.getElementById("secretButton").addEventListener("click", () => {
+      forceMyTown("Turin, Italy", 400);
     });
 
-    index = 0;
-    timeLeft = stops[0].countdown;
-  }
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key.toLowerCase() === "p") {
-      forceMyTown("Parma, Italy", 3);
-    }
-  });
-
+    /* Countdown formattato */
     function formatTime(seconds) {
-  if (seconds < 60) {
-    return `${seconds} seconds`;
-  }
-
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-
-  if (secs === 0) {
-    return `${mins} minute${mins > 1 ? "s" : ""}`;
-  }
-
-  return `${mins} minute${mins > 1 ? "s" : ""} ${secs} seconds`;
-}
+      if (seconds < 60) return `${seconds} seconds`;
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      if (secs === 0) return `${mins} minute${mins > 1 ? "s" : ""}`;
+      return `${mins} minute${mins > 1 ? "s" : ""} ${secs} seconds`;
+    }
 
   // Lista delle tappe
   const stops = [
-    {
-      lastSeen: "Ajaccio, Corsica, France",
-      heading: "Nice, France",
-      countdown: 100
-    },
-    {
-      lastSeen: "Nice, France",
-      heading: "Genoa, Italy",
-      countdown: 20
-    },
-    {
-      lastSeen: "Genoa, Italy",
-      heading: "Milan, Italy",
-      countdown: 18
-    },
-    {
-      lastSeen: "Milan, Italy",
-      heading: "Casa di Luca, Parma",
-      countdown: 15
-    }
-  ];
+  // 🌎 NORD AMERICA
+  { lastSeen: "St. John's, Canada", heading: "Montreal, Canada", countdown: 300 },
+  { lastSeen: "Montreal, Canada", heading: "Toronto, Canada", countdown: 300 },
+  { lastSeen: "Toronto, Canada", heading: "New York, USA", countdown: 240 },
+  { lastSeen: "New York, USA", heading: "Philadelphia, USA", countdown: 180 },
+  { lastSeen: "Philadelphia, USA", heading: "Washington, D.C., USA", countdown: 180 },
+  { lastSeen: "Washington, D.C., USA", heading: "Atlanta, USA", countdown: 300 },
+  { lastSeen: "Atlanta, USA", heading: "Miami, USA", countdown: 300 },
+  { lastSeen: "Miami, USA", heading: "Mexico City, Mexico", countdown: 200 },
+
+  // 🌎 AMERICA CENTRALE & SUD
+  { lastSeen: "Mexico City, Mexico", heading: "Guatemala City, Guatemala", countdown: 240 },
+  { lastSeen: "Guatemala City, Guatemala", heading: "Panama City, Panama", countdown: 200 },
+  { lastSeen: "Panama City, Panama", heading: "Bogotá, Colombia", countdown: 360 },
+  { lastSeen: "Bogotá, Colombia", heading: "Buenos Aires, Argentina", countdown: 300 },
+  { lastSeen: "Buenos Aires, Argentina", heading: "Rio de Janeiro, Brazil", countdown: 300 },
+  { lastSeen: "Rio de Janeiro, Brazil", heading: "São Paulo, Brazil", countdown: 240 },
+  { lastSeen: "São Paulo, Brazil", heading: "Tokyo, Japan", countdown: 240 },
+  // 🌏 ASIA ORIENTALE
+  { lastSeen: "Tokyo, Japan", heading: "Osaka, Japan", countdown: 240 },
+  { lastSeen: "Osaka, Japan", heading: "Seoul, South Korea", countdown: 300 },
+  { lastSeen: "Seoul, South Korea", heading: "Beijing, China", countdown: 240 },
+  { lastSeen: "Beijing, China", heading: "Shanghai, China", countdown: 300 },
+  { lastSeen: "Shanghai, China", heading: "Hong Kong, China", countdown: 230 },
+
+  // 🌏 SUD-EST ASIA
+  { lastSeen: "Hong Kong, China", heading: "Bangkok, Thailand", countdown: 300 },
+  { lastSeen: "Bangkok, Thailand", heading: "Singapore", countdown: 330 },
+  { lastSeen: "Singapore", heading: "Delhi, India", countdown: 300 },
+  { lastSeen: "Delhi, India", heading: "Mumbai, India", countdown: 180 },
+
+  // 🌍 MIDDLE EAST
+  { lastSeen: "Mumbai, India", heading: "Dubai, UAE", countdown: 320 },
+  { lastSeen: "Dubai, UAE", heading: "Doha, Qatar", countdown: 240 },
+
+  // 🌍 EUROPA ORIENTALE
+  { lastSeen: "Jerusalem, Israel", heading: "Istanbul, Turkey", countdown: 300 },
+  { lastSeen: "Istanbul, Turkey", heading: "Athens, Greece", countdown: 300 },
+  { lastSeen: "Athens, Greece", heading: "Sofia, Bulgaria", countdown: 240 },
+  { lastSeen: "Sofia, Bulgaria", heading: "Bucharest, Romania", countdown: 240 },
+  { lastSeen: "Bucharest, Romania", heading: "Budapest, Hungary", countdown: 300 },
+
+  // 🌍 EUROPA CENTRALE
+  { lastSeen: "Budapest, Hungary", heading: "Vienna, Austria", countdown: 240 },
+  { lastSeen: "Vienna, Austria", heading: "Prague, Czech Republic", countdown: 240 },
+  { lastSeen: "Prague, Czech Republic", heading: "Berlin, Germany", countdown: 300 },
+  { lastSeen: "Berlin, Germany", heading: "Hamburg, Germany", countdown: 240 },
+  { lastSeen: "Hamburg, Germany", heading: "Copenhagen, Denmark", countdown: 300 },
+
+  // 🌍 EUROPA OCCIDENTALE
+  { lastSeen: "Copenhagen, Denmark", heading: "Amsterdam, Netherlands", countdown: 190 },
+  { lastSeen: "Amsterdam, Netherlands", heading: "Brussels, Belgium", countdown: 240 },
+  { lastSeen: "Brussels, Belgium", heading: "Paris, France", countdown: 300 },
+  { lastSeen: "Paris, France", heading: "Lyon, France", countdown: 240 },
+  { lastSeen: "Lyon, France", heading: "Nice, France", countdown: 300 },
+  { lastSeen: "Nice, France", heading: "Lisbon, Portugal", countdown: 300 },
+
+
+  // 🌍 RITORNO IN EUROPA
+
+  // 🇮🇹 ITALIA
+  { lastSeen: "Lisbon, Portugal", heading: "Catania, Italy", countdown: 480 },
+  { lastSeen: "Catania, Italy", heading: "Naples, Italy", countdown: 180 },
+  { lastSeen: "Naples, Italy", heading: "Roma, Italy", countdown: 240 },
+  { lastSeen: "Rome, Italy", heading: "Bologna, Italy", countdown: 240 },
+  { lastSeen: "Bologna, Italy", heading: "Milan, Italy", countdown: 180 },
+  { lastSeen: "Milan, Italy", heading: "Aosta, Italy", countdown: 180 }
+
+];
 
   let index = 0;
-  let timeLeft = stops[index].countdown;
+    let timeLeft = stops[index].countdown;
 
-  // 🎁 PACCHI CONSEGNATI — parte da un numero a scelta
-  let giftsDelivered = 3684123;
+    /* Pacchi */
+    let giftsDelivered = 3684123;
+    const giftsPerSecondMin = 5000;
+    const giftsPerSecondMax = 20000;
 
-  // Ogni secondo quanti pacchi aggiunge?
-  const giftsPerSecondMin = 5000;
-  const giftsPerSecondMax = 20000;
-
-  // Funzione per formattare i numeri con la virgola
-  function formatNumber(num) {
-    return num.toLocaleString("en-US");
-  }
-
-  // Aggiorna il testo della barra
-  function updateBar() {
-  const stop = stops[index];
-  document.getElementById("lastSeen").textContent = stop.lastSeen;
-
-  // countdown formattato minuti + secondi
-  document.getElementById("headingFor").textContent =
-    `${stop.heading} in ${formatTime(timeLeft)}`;
-
-  // 🔁 aggiorna il numero dei pacchi
-  document.getElementById("gifts").textContent =
-    formatNumber(giftsDelivered);
-}
-
-  // Timer generale che gira ogni secondo
-  function tick() {
-    timeLeft--;
-
-    // 🔄 Aggiorna pacchi consegnati in modo realistico
-    const randomIncrement =
-      Math.floor(Math.random() * (giftsPerSecondMax - giftsPerSecondMin + 1)) +
-      giftsPerSecondMin;
-
-    giftsDelivered += randomIncrement;
-
-    // Cambio città quando arriva a zero
-    if (timeLeft <= 0) {
-      index = (index + 1) % stops.length;
-      timeLeft = stops[index].countdown;
+    /* Aggiorna barra */
+    function updateBar() {
+      const stop = stops[index];
+      document.getElementById("lastSeen").textContent = stop.lastSeen;
+      document.getElementById("headingFor").textContent =
+        `${stop.heading} in ${formatTime(timeLeft)}`;
+      document.getElementById("gifts").textContent =
+        formatNumber(giftsDelivered);
     }
 
+    function formatNumber(n) {
+      return n.toLocaleString("en-US");
+    }
+
+    /* Timer */
+    function tick() {
+      timeLeft--;
+
+      giftsDelivered +=
+        Math.floor(Math.random() * (giftsPerSecondMax - giftsPerSecondMin + 1)) +
+        giftsPerSecondMin;
+
+      if (timeLeft <= 0) {
+        index = (index + 1) % stops.length;
+        timeLeft = stops[index].countdown;
+      }
+
+      updateBar();
+    }
+
+    /* Avvio */
     updateBar();
-  }
-
-  // Avvio
-  updateBar();
-  setInterval(tick, 1000);
-</script>
-
+    setInterval(tick, 1000);
+  </script>
 
 </body>
 </html>
